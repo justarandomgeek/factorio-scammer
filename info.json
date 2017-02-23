@@ -1,0 +1,11 @@
+{
+  "name": "scammer",
+  "version": "0.14.0",
+  "factorio_version": "0.14",
+  "title": "Scanning Controlled Automated Material Mapping Enhanced Radar",
+  "author": "justarandomgeek",
+  "homepage": "",
+  "contact": "justarandomgeek@gmail.com",
+  "description": "SCAMMER allows control of radar scanning, and provides information about the scanned area.",
+  "dependencies": ["base >= 0.14.0"]
+}
