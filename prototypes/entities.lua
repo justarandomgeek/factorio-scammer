@@ -9,4 +9,5 @@ local scammerctrl = table.deepcopy(data.raw["constant-combinator"]["constant-com
 scammerctrl.name="scammer-control"
 scammerctrl.minable= nil
 scammerctrl.order="z[lol]-[scammerctrl]"
+scammerctrl.item_slot_count = 500
 data:extend{scammerctrl}

@@ -18,15 +18,57 @@ local function ReadBoundingBox(signet)
   return {ReadPosition(signet,false,0),ReadPosition(signet,true,1)}
 end
 
+local function SignalEntities(ents)
+  local signals = {}
+  local items = {}
+  for _,ent in pairs(ents) do
+    local entproto = ent.prototype
+    --TODO check ent.ghost_prototype when needed
+
+    if ent.minable and entproto.mineable_properties.products then
+      for _,product in pairs(entproto.mineable_properties.products) do
+        if product.type == "item" then
+          local amount = product.amount or product.amount_min --TODO: handle variable mining better
+          items[product.name] = (items[product.name] or 0) + amount
+        end
+      end
+    end
+  end
+  for item,count in pairs(items) do
+    signals[#signals+1]={index=#signals+1,count=count,signal={name=item,type="item"}}
+  end
+  return signals
+end
+
+local function ScanPosition(surface,position)
+  ents = surface.find_entities_filtered{position=position}
+  return SignalEntities(ents)
+end
+
+local function ScanArea(surface,area)
+  if area[1].x == area[2].x and area[1].y==area[2].y then
+    return nil
+  end
+
+  ents = surface.find_entities_filtered{area=area}
+  return SignalEntities(ents)
+end
+
 
 local function onTickManager(manager)
   -- read cc1 signals. Only uses one wire, red if both connected.
   local signet1 = manager.cc1.get_circuit_network(defines.wire_type.red) or manager.cc1.get_circuit_network(defines.wire_type.green)
   if signet1 and #signet1.signals > 0 then
-    local signet2 = manager.cc2.get_circuit_network(defines.wire_type.red) or manager.cc2.get_circuit_network(defines.wire_type.green)
-
-
+    if signet1.get_signal({name="signal-P",type="virtual"})==1 then
+      manager.cc2.get_or_create_control_behavior().parameters={parameters=ScanPosition(manager.ent.surface,ReadPosition(signet1))}
+      return
+    elseif signet1.get_signal({name="signal-A",type="virtual"})==1 then
+      manager.cc2.get_or_create_control_behavior().parameters={parameters=ScanArea(manager.ent.surface,ReadBoundingBox(signet1))}
+      return
+    end
   end
+
+  manager.cc2.get_or_create_control_behavior().parameters=nil
 end
 
 

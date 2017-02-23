@@ -12,7 +12,7 @@ BoundingBox: {{X,Y},{U,V}}
 
 ### Commands:
 
-  * XY : Scan Position
+  * P=1 + XY : Scan Position
     * Output found ores/entities to CC2
-  * XYUV : Scan box
+  * A=1 + XYUV : Scan box
     * Output count of found ores/entities to CC2
