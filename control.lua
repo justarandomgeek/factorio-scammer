@@ -23,7 +23,7 @@ local function SignalEntities(ents)
   local items = {}
   for _,ent in pairs(ents) do
     local entproto = ent.prototype
-    --TODO check ent.ghost_prototype when needed
+    --TODO: for ghosts maybe count items to revive instead?
 
     if ent.minable and entproto.mineable_properties.products then
       for _,product in pairs(entproto.mineable_properties.products) do
