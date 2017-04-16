@@ -23,19 +23,28 @@ local function SignalEntities(ents)
   local items = {}
   for _,ent in pairs(ents) do
     local entproto = ent.prototype
-    --TODO: for ghosts maybe count items to revive instead?
+    if ent.prototype.type == "resource" then
+  		if not items[ent.name] then items[ent.name] = {} end
 
-    if ent.minable and entproto.mineable_properties.products then
+      if ent.prototype.resource_category == "basic-solid" then
+  			items[ent.name].signal = {name=ent.name,type="item"}
+  		else
+  			items[ent.name].signal = {name=ent.name,type="fluid"}
+  		end
+  		items[ent.name].count = (items[ent.name].count or 0) + ent.amount
+    elseif ent.minable and entproto.mineable_properties.products then
       for _,product in pairs(entproto.mineable_properties.products) do
         if product.type == "item" then
-          local amount = product.amount or product.amount_min --TODO: handle variable mining better
-          items[product.name] = (items[product.name] or 0) + amount
+          if not items[product.name] then items[product.name] = {} end
+          local amount = product.amount or product.amount_min --TODO: handle variable mining better??
+          items[product.name] = {count = (items[product.name].count or 0) + amount, signal={type=product.type,name=product.name}}
         end
       end
     end
+    --TODO: for ghosts maybe count items to revive instead?
   end
-  for item,count in pairs(items) do
-    signals[#signals+1]={index=#signals+1,count=count,signal={name=item,type="item"}}
+  for _,item in pairs(items) do
+    signals[#signals+1]={index=#signals+1,count=item.count,signal=item.signal}
   end
   return signals
 end
