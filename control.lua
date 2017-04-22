@@ -55,8 +55,14 @@ local function ScanPosition(surface,position)
 end
 
 local function ScanArea(surface,area)
+  -- error if selection box is 0-area
   if area[1].x == area[2].x and area[1].y==area[2].y then
-    return nil
+    return {{index=1,count=-1,signal={type="item",name="scammer"}}}
+  end
+
+  -- error if selection box too large
+  if area[2].x - area[1].x > 32 or area[2].y - area[1].y > 32 then
+    return {{index=1,count=-2,signal={type="item",name="scammer"}}}
   end
 
   ents = surface.find_entities_filtered{area=area}
