@@ -61,9 +61,9 @@ local function ScanArea(surface,area)
   end
 
   -- error if selection box too large
-  if area[2].x - area[1].x > 32 or area[2].y - area[1].y > 32 then
-    return {{index=1,count=-2,signal={type="item",name="scammer"}}}
-  end
+  --if area[2].x - area[1].x > 32 or area[2].y - area[1].y > 32 then
+  --  return {{index=1,count=-2,signal={type="item",name="scammer"}}}
+  --end
 
   ents = surface.find_entities_filtered{area=area}
   return SignalEntities(ents)
@@ -73,7 +73,7 @@ end
 local function onTickManager(manager)
   -- read cc1 signals. Only uses one wire, red if both connected.
   local signet1 = manager.cc1.get_circuit_network(defines.wire_type.red) or manager.cc1.get_circuit_network(defines.wire_type.green)
-  if signet1 and #signet1.signals > 0 then
+  if signet1 and signet1.signals and #signet1.signals > 0 then
     if signet1.get_signal({name="signal-P",type="virtual"})==1 then
       manager.cc2.get_or_create_control_behavior().parameters={parameters=ScanPosition(manager.ent.surface,ReadPosition(signet1))}
       return
