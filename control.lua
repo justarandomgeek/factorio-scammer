@@ -50,6 +50,7 @@ local function SignalEntities(ents)
 end
 
 local function ScanPosition(surface,position)
+  local ents
   ents = surface.find_entities_filtered{position=position}
   return SignalEntities(ents)
 end
@@ -61,29 +62,66 @@ local function ScanArea(surface,area)
   end
 
   -- error if selection box too large
-  --if area[2].x - area[1].x > 32 or area[2].y - area[1].y > 32 then
-  --  return {{index=1,count=-2,signal={type="item",name="scammer"}}}
-  --end
+  if area[2].x - area[1].x > 33 or area[2].y - area[1].y > 33 then
+    return {{index=1,count=-2,signal={type="item",name="scammer"}}}
+  end
 
+  local ents
   ents = surface.find_entities_filtered{area=area}
   return SignalEntities(ents)
 end
 
+local function clearTags(manager)
+  if manager.charttags then
+    if manager.charttags.tags then
+      for _,t in pairs(manager.charttags.tags) do
+        t.destroy()
+      end
+    end
+
+    manager.charttags = nil
+  end
+end
 
 local function onTickManager(manager)
   -- read cc1 signals. Only uses one wire, red if both connected.
   local signet1 = manager.cc1.get_circuit_network(defines.wire_type.red) or manager.cc1.get_circuit_network(defines.wire_type.green)
+
   if signet1 and signet1.signals and #signet1.signals > 0 then
     if signet1.get_signal({name="signal-P",type="virtual"})==1 then
-      manager.cc2.get_or_create_control_behavior().parameters={parameters=ScanPosition(manager.ent.surface,ReadPosition(signet1))}
+      local pos = ReadPosition(signet1)
+      manager.cc2.get_or_create_control_behavior().parameters={parameters=ScanPosition(manager.ent.surface,pos)}
+      clearTags(manager)
+      manager.charttags={
+        expire = game.tick + 30,
+        tags = {
+          manager.ent.force.add_chart_tag(manager.ent.surface,{icon={name="scammer",type='item'},position=pos})
+        }
+      }
       return
     elseif signet1.get_signal({name="signal-A",type="virtual"})==1 then
-      manager.cc2.get_or_create_control_behavior().parameters={parameters=ScanArea(manager.ent.surface,ReadBoundingBox(signet1))}
+      local box = ReadBoundingBox(signet1)
+      manager.cc2.get_or_create_control_behavior().parameters={parameters=ScanArea(manager.ent.surface,box)}
+
+      clearTags(manager)
+      manager.charttags={
+        expire = game.tick + 30,
+        tags = {
+          manager.ent.force.add_chart_tag(manager.ent.surface,{icon={name="scammer",type='item'},position=box[1]}),
+          manager.ent.force.add_chart_tag(manager.ent.surface,{icon={name="scammer",type='item'},position=box[2]}),
+          manager.ent.force.add_chart_tag(manager.ent.surface,{icon={name="scammer",type='item'},position={x=box[1].x,y=box[2].y}}),
+          manager.ent.force.add_chart_tag(manager.ent.surface,{icon={name="scammer",type='item'},position={x=box[2].x,y=box[1].y}}),
+
+        }
+      }
       return
     end
   end
 
   manager.cc2.get_or_create_control_behavior().parameters=nil
+  if manager.charttags and manager.charttags.expire > game.tick then
+    clearTags(manager)
+  end
 end
 
 
